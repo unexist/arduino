@@ -75,13 +75,13 @@ void loop() {
     setColor(activeColor);*/
 
   //rainbowFull(30, 2);
-  idleFireworks(0);
+  ///idleFireworks(0);
   //idleColorFlicker(21);
   //idleDisco();
   //idleColorFader(0,85);
 
 
-  //rainbowFull(30, 0, 1);
+  rainbowFull(30, 0, 1);
 
   //whileTouching();
 

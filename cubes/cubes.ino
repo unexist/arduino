@@ -27,7 +27,7 @@
 char colors[COLORS] = { 0 };
 
 /* DMX stuff */
-#define STARTADDR  289
+#define STARTADDR  217
 #define RX_PIN     3
 #define WX_PIN     4
 

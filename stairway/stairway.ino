@@ -1,114 +1,234 @@
 /**
- * @package stairway
- *
- * @file Cubes arduino sketch
- * @copyright (c) 2017 Christoph Kappel <unexist@subforge.org>
- * @version $Id$
- *
- * This program can be distributed under the terms of the GNU GPL.
- * See the file COPYING.
+   @package stairway
+
+   @file Stairway arduino sketch
+   @copyright (c) 2017 Christoph Kappel <unexist@subforge.org>
+   @version $Id$
+
+   This program can be distributed under the terms of the GNU GPL.
+   See the file COPYING.
  **/
 
-#include <SPI.h>
+#include <Adafruit_NeoPixel.h>
 
-/* LED stuff */
-#define LED_DDR          DDRB
-#define LED_PORT         PORTB
-#define LED_PIN          (1 << PORTB5)
+// Parameter 1 = number of pixels in strip
+// Parameter 2 = pin number (most are valid)
+// Parameter 3 = pixel type flags, add together as needed:
+//   NEO_RGB     Pixels are wired for RGB bitstream
+//   NEO_GRB     Pixels are wired for GRB bitstream
+//   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
+//   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip)
 
-#define GROUPS           5                                         ///< Total LED groups
-#define LED_PER_GROUP    2                                          ///< LEDs per group
-#define CHANNEL_PER_LED  3                                          ///< Channel per LED (typically RGB=3)
-#define COLORS           (GROUPS * CHANNEL_PER_LED * LED_PER_GROUP) ///< Total colors
+#define NROWS          18                                         ///< Total LED ROWS
+#define PIXEL_PER_ROW  23                                         ///< LEDs per group
 
-char colors[COLORS] = { 0 };
+#define PIXEL_COUNT (NROWS * PIXEL_PER_ROW)
+#define PIXEL_PIN 6
+#define PIXEL_TYPE (NEO_GRB + NEO_KHZ800)
 
-/* Presets */
-#define RED   255,   0,  0
-#define GREEN   0, 255, 255
-#define BLUE    0,   0, 255
+#define BLACK_PIXEL   0,   0,   0
+#define WHITE_PIXEL 255, 255, 255
 
-/* transfer
- * Transfer data via SPI and wait for finish
- * @param  data  Data to write
- **/
+/* Structs */
+typedef struct color_t
+{
+  int r;
+  int g;
+  int b;
+} Color;
+
+typedef struct roller_t
+{
+  uint32_t mask;
+  struct roller_t *next;
+} Roller;
+
+typedef struct figure_t
+{
+  uint32_t *masks;
+  uint8_t nmasks;
+} Figure;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
 void
-transfer(volatile char data)
+setForRow(int16_t rowid,
+  Color *c)
 {
-  /* Copy data */
-  SPDR = data;
-
-  /* Poll bit and wait for end of the transmission */
-  while(!(SPSR & (1 << SPIF)));
-}
-
-/** updateCols
- *  Write color values to SPI
- **/
-
-void
-updateCols()
-{
-  for(char i = 0; i < COLORS; i++)
+  int16_t offset = (rowid * PIXEL_PER_ROW);
+  
+  for(int16_t pos = offset; pos < offset + PIXEL_PER_ROW; pos++)
     {
-      transfer(colors[i]);
+      strip.setPixelColor(pos, c->r, c->g, c->b);
     }
-}
 
-/** setForGroups
- * Set RGB color for given group
- * @param  gid  ID of group to set colors
- * @param  r    Red value
- * @param  g    Green value
- * @param  b    Blue value
- **/
+  strip.show();
+}
 
 void
-setForGroup(int gid,
-  char r,
-  char g,
-  char b)
-{
-  for(char curgid = 0, pos = (gid * LED_PER_GROUP * CHANNEL_PER_LED);
-      curgid < LED_PER_GROUP; curgid++, pos += CHANNEL_PER_LED)
+setForCol(int16_t colid,
+  Color *c)
+{  
+  boolean even = true;
+  
+  for(int16_t row = 0; row < NROWS; row++, even = !even)
     {
-      colors[pos]     = r;
-      colors[pos + 1] = g;
-      colors[pos + 2] = b;
+      int16_t pos = (row * PIXEL_PER_ROW);
+            
+      strip.setPixelColor(pos + (even ? colid : (PIXEL_PER_ROW - colid)), 
+        c->r, c->g, c->b);
     }
+
+  strip.show();
 }
 
-/** setup
- * Set up arduino
- **/
+void
+setRowMask(int16_t rowid,
+  int32_t mask,
+  Color *c,
+  boolean redraw)
+{
+  if(0 > rowid) return;
  
+  boolean even   = !!(rowid & 1);
+  int16_t offset = (rowid * PIXEL_PER_ROW);
+  
+  for(int16_t b = PIXEL_PER_ROW; b >= 0; b--)
+    {
+      int16_t pos = (even ? (offset + PIXEL_PER_ROW - b) : offset + b);
+      
+      if(mask & (1L << b)) strip.setPixelColor(pos, c->r, c->g, c->b);
+      else strip.setPixelColor(pos, 0, 0, 0);
+    }
+ 
+  if(redraw) strip.show();
+}
+
+void
+snakeSteps()
+{
+  boolean reverse = false;
+  int16_t mask = 1;
+  Color c = { 255, 255, 255 };
+
+  for(int16_t i = 0; i < 16; i++)
+    {
+      for(int16_t row = 0; row < NROWS; row++)
+        {
+          setRowMask(row, mask, &c, true);
+
+          if(reverse) mask >>= 2;
+          else        mask <<= 2;
+
+          if(mask <= (1L << 0) || mask >= (1L << PIXEL_PER_ROW / 2)) reverse = !reverse;
+        }
+      mask <<= 1;
+    }
+}
+
+void
+rgbSteps()
+{
+  int idx = 0;
+  int dir = 1;
+  Color c = { 255, 0, 0 };
+
+  for(;;)
+    {
+      setForRow(idx, &c);
+      idx += dir;
+  
+      delay(60);
+
+      if(idx > NROWS || idx <= 0)
+        {
+          dir = dir * -1;
+    
+          if(255 == c.r)      { c.r =   0; c.g = 255; c.b =   0; }
+          else if(255 == c.g) { c.r =   0; c.g =   0; c.b = 255; }
+          else if(255 == c.b) { c.r = 255; c.g =   0; c.b =   0; }
+        }
+    }
+}
+
+void
+RollerAddFigure(Roller **r,
+  Figure *fig)
+{
+  for(uint8_t i = 0; i < fig->nmasks; i++)
+    {
+      Roller *fr = (Roller *)calloc(1, sizeof(Roller));
+
+      fr->mask   = fig->masks[i];
+      (*r)->next = fr;
+      *r         = fr;
+    }  
+}
+
+Figure*
+FigureCreate(uint8_t nmasks)
+{
+  Figure *fig = (Figure *)calloc(1, sizeof(Figure));
+
+  fig->masks  = (uint32_t *)calloc(4, sizeof(uint32_t));
+  fig->nmasks = nmasks;
+
+  return fig;
+}
+
+void
+FigureSetMask(Figure *fig,
+  uint8_t idx,
+  uint32_t mask)
+{
+  if(idx < fig->nmasks)
+    fig->masks[idx] = mask;
+}
+
+Roller *head = NULL, *cur = NULL;
+
 void 
 setup()
 {
-  /* Init LED and SPI */
-  LED_DDR  |=  LED_PIN; ///< Enable output for LED
-  LED_PORT &= ~LED_PIN; ///< LED off
+  strip.begin();
+  strip.show();
 
-  SPI.begin();
-  SPI.setBitOrder(MSBFIRST);
-  SPI.setDataMode(SPI_MODE0);
-  SPI.setClockDivider(SPI_CLOCK_DIV16); ///< 1 MHz max, else flicker
+  /* Create figures */
+  Figure *fig_blank = FigureCreate(1);
 
-  updateCols();
+  FigureSetMask(fig_blank, 0, 0);
+  
+  Figure *fig_arrow = FigureCreate(3);
+  
+  FigureSetMask(fig_arrow, 0, ((1L <<  8)|(1L << 16)));
+  FigureSetMask(fig_arrow, 1, ((1L << 10)|(1L << 14)));
+  FigureSetMask(fig_arrow, 2, (1L << 12));
+
+  /* Create roller */
+  head = cur = (Roller *)calloc(1, sizeof(Roller));
+
+  RollerAddFigure(&cur, fig_blank);
+  RollerAddFigure(&cur, fig_arrow);
+
+  cur->next = head;
+  cur       = head;
 }
-
-/** loop
- * Run in loop
- **/
 
 void
 loop()
 {
-  setForGroup(0, RED);  
-  setForGroup(1, GREEN);
-  setForGroup(2, BLUE);
+  Color c = { 255, 0, 0 };
 
-  updateCols();
-  /* We do nothing here */
+  while(1)
+    {
+      for(uint8_t i = 0; i < NROWS; i++)
+        { 
+          setRowMask(i, cur->mask, &c, false);
+
+          cur = cur->next;
+        }
+        
+      strip.show();
+      delay(500);
+    }
 }
