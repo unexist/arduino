@@ -17,7 +17,7 @@
 #define PIN 6
 #define NROWS          18
 #define PIXEL_PER_ROW  23
-#define PIXELS         (NROWS * PIXEL_PER_ROW)
+#define PIXELS         22
 #define FADERATE       0.95
 #define DELAY          30
 
@@ -38,12 +38,12 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 DMX_Slave slave(CHANNELS, RX_PIN);
 
-byte dmx_red    = 0;
-byte dmx_green  = 0; 
-byte dmx_blue   = 0; 
+byte dmx_red    = 255;
+byte dmx_green  = 255; 
+byte dmx_blue   = 255; 
 byte dmx_speed  = 0; 
-byte dmx_delay  = 0;
-byte dmx_bright = 0;
+byte dmx_delay  = 50;
+byte dmx_bright = 50;
 
 /** onFrameReceived
  *  Handle frame receival
@@ -73,6 +73,8 @@ setup()
   /* Init strip */
   strip.begin();
   strip.show();
+
+  strip.setBrightness(dmx_bright);
 
   /* Init and start slave */
   slave.enable ();  

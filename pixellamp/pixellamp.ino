@@ -20,9 +20,9 @@
 //   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
 //   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip)
 
-#define PIXEL_COUNT 414
+#define PIXEL_COUNT 27
 #define PIXEL_PIN 6
-#define PIXEL_TYPE NEO_GRB + NEO_KHZ800
+#define PIXEL_TYPE NEO_RGB + NEO_KHZ800
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 

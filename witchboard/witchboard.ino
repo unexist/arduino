@@ -87,20 +87,21 @@ Sign signs[] = {
 short unsigned int colors[COLORS] = { 0 };
 
 /* Auto mode */
-bool auto_mode  = false;
+bool auto_mode  = true;
 int  auto_delay = 1000;
 
 short unsigned int auto_red   = 255;
 short unsigned int auto_green = 255;
 short unsigned int auto_blue  = 255;
 
-#define NAUTOMSGS 4
+#define NAUTOMSGS 5
 
 char auto_msgs[NAUTOMSGS][30] = {
   { "HELLO" },
   { "ANYONE OUT THERE" },
   { "HELP ME" },
-  { "YOU ARE GOING TO DIE" }
+  { "YOU ARE GOING TO DIE" },
+  { "SEND NUDES" }
 };
 
 DMX_Slave slave(CHANNELS, RX_PIN);
