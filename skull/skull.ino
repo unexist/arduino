@@ -1,0 +1,120 @@
+/**
+ * @package skull
+ *
+ * @file Skull arduino sketch
+ * @copyright (c) 2018 Christoph Kappel <unexist@subforge.org>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
+ **/
+
+#include <SPI.h>
+
+/* LED stuff */
+#define LED_DDR   DDRB
+#define LED_PORT  PORTB
+#define LED_PIN   (1 << PORTB5)
+
+#define LEDS      5
+#define COLORS    (LEDS * 3)
+
+char colors[COLORS] = { 0 };
+
+/* Presets */
+#define RED   255,   0,  0
+#define GREEN   0, 255, 255
+#define BLUE    0,   0, 255
+
+/* transfer
+ * Transfer data via SPI and wait for finish
+ * @param  data  Data to write
+ **/
+
+void
+transfer(volatile char data)
+{
+  /* Copy data */
+  SPDR = data;
+
+  /* Poll bit and wait for end of the transmission */
+  while(!(SPSR & (1 << SPIF)));
+}
+
+/** updateCols
+ *  Write color values to SPI
+ **/
+
+void
+updateCols()
+{
+  for(char i = 0; i < COLORS; i++)
+    {
+      transfer(colors[i]);
+    }
+}
+
+#define LEFT 0
+#define RIGHT 1
+
+void
+setEye(char side,
+  char r,
+  char g,
+  char b)
+{
+  char idx = (LEFT == side ? 9 : 12);
+
+  colors[idx]     = r; 
+  colors[idx + 1] = g;  
+  colors[idx + 2] = b;  
+}
+
+void
+setBase(char pos,
+  char r,
+  char g,
+  char b)
+{
+  int idx = pos * 3;
+  
+  colors[idx]     = r; 
+  colors[idx + 1] = g;  
+  colors[idx + 2] = b;
+}
+
+/** setup
+ * Set up arduino
+ **/
+ 
+void 
+setup()
+{
+  /* Init LED and SPI */
+  LED_DDR  |=  LED_PIN; ///< Enable output for LED
+  LED_PORT &= ~LED_PIN; ///< LED off
+
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setClockDivider(SPI_CLOCK_DIV16); ///< 1 MHz max, else flicker
+
+  setEye(LEFT, RED);
+  setEye(RIGHT, RED);
+
+  setBase(0, RED);
+  setBase(1, GREEN);
+  setBase(2, BLUE);
+
+  updateCols();
+}
+
+/** loop
+ * Run in loop
+ **/
+
+void
+loop()
+{
+  /* We do nothing here */
+}
