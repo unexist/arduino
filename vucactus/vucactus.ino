@@ -29,7 +29,7 @@ int values[7];
 char colors[COLORS] = { 0 };
 
 /* Debug */
-//#define SERIAL 1
+//#define DEBUG 1
 
 /* Cactus levels */
 typedef struct level_t {
@@ -162,9 +162,9 @@ setup()
 
   updateCols();  
 
-#ifdef SERIAL
+#ifdef DEBUG
   Serial.begin(9600);
-#endif /* SERIAL */
+#endif /* DEBUG */
 
   /* Pin setup: MSGEQ7 */
   pinMode(ANALOG_PIN, INPUT);
@@ -198,10 +198,10 @@ loop()
       
       values[i] = analogRead(ANALOG_PIN);
 
-#ifdef SERIAL
+#ifdef DEBUG
       Serial.print(" ");
       Serial.print(values[i]);
-#endif /* SERIAL */
+#endif /* DEBUG */
 
       digitalWrite(STROBE_PIN, HIGH); ///< Clock multiplexer
    }
