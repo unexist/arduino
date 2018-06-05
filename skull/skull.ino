@@ -11,6 +11,13 @@
 
 #include <SPI.h>
 
+/* MSGEQ7 stuff */
+#define ANALOG_PIN A0
+#define STROBE_PIN 2
+#define RESET_PIN 3
+
+int values[7];
+
 /* LED stuff */
 #define LED_DDR   DDRB
 #define LED_PORT  PORTB
@@ -26,9 +33,13 @@ char colors[COLORS] = { 0 };
 #define GREEN   0, 255, 255
 #define BLUE    0,   0, 255
 
-/* transfer
+/* Debug */
+#define DEBUG 1
+
+/**
  * Transfer data via SPI and wait for finish
- * @param  data  Data to write
+ * 
+ * @param[in]  data  Data to write
  **/
 
 void
@@ -41,8 +52,8 @@ transfer(volatile char data)
   while(!(SPSR & (1 << SPIF)));
 }
 
-/** updateCols
- *  Write color values to SPI
+/**
+ * Write color values to SPI
  **/
 
 void
@@ -52,6 +63,19 @@ updateCols()
     {
       transfer(colors[i]);
     }
+}
+
+/**
+ * Clear columns
+ */
+
+void
+clearCols()
+{
+  for(short unsigned int i = 0; i < COLORS; i++)
+    {
+      colors[i] = 0;
+    }  
 }
 
 #define LEFT 0
@@ -83,7 +107,7 @@ setBase(char pos,
   colors[idx + 2] = b;
 }
 
-/** setup
+/**
  * Set up arduino
  **/
  
@@ -116,5 +140,28 @@ setup()
 void
 loop()
 {
-  /* We do nothing here */
+  int i;
+  
+  /* Reset MSGEQ7 */
+  digitalWrite(RESET_PIN, HIGH);
+  digitalWrite(RESET_PIN, LOW);
+
+  for(i = 0; i < 7; i++)
+    {
+      digitalWrite(STROBE_PIN, LOW);
+      delayMicroseconds(30); ///< Allow the output to settle
+      
+      values[i] = analogRead(ANALOG_PIN);
+
+#ifdef DEBUG
+      Serial.print(" ");
+      Serial.print(values[i]);
+#endif /* DEBUG */
+
+      digitalWrite(STROBE_PIN, HIGH); ///< Clock multiplexer
+   }
+
+#ifdef SERIAL   
+ Serial.println();
+#endif /* SERIAL */  
 }
