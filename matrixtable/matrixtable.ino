@@ -1,12 +1,12 @@
 /**
-   @package matrixtable
-
-   @file Matrixtable arduino sketch
-   @copyright (c) 2017 Christoph Kappel <unexist@subforge.org>
-   @version $Id$
-
-   This program can be distributed under the terms of the GNU GPL.
-   See the file COPYING.
+ * @package matrixtable
+ *
+ * @file Matrixtable arduino sketch
+ * @copyright (c) 2018 Christoph Kappel <unexist@subforge.org>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPL.
+ * See the file COPYING.
  **/
 
 #include <Adafruit_NeoPixel.h>
@@ -122,11 +122,14 @@ setPixel(uint8_t x,
     return;
 
   /* Flip x */
-  if(0 == y % 2) {
-    pixel = x;
-  } else {
-    pixel = PIXEL_PER_ROW - x;
-  }
+  if(0 == y % 2)
+    {
+      pixel = x;
+    }
+  else
+    {
+      pixel = PIXEL_PER_ROW - x;
+    }
 
   /* Add y */
   pixel += y * PIXEL_PER_ROW;
@@ -139,14 +142,17 @@ setPixel(uint8_t x,
 }
 
 void
-drawImage(Image *img) {
-    for (int x = 0; x < PIXEL_PER_ROW; x++) {
-    for (int y = 0; y < PIXEL_ROWS; y++) {
-      uint8_t *pal = img->palette[(uint8_t)img->data[x][y]];
-
-      setPixel(x, y, pal[0], pal[1], pal[2]);
+drawImage(Image *img)
+{
+  for (int x = 0; x < PIXEL_PER_ROW; x++)
+    {
+      for (int y = 0; y < PIXEL_ROWS; y++)
+        {
+          uint8_t *pal = img->palette[(uint8_t)img->data[x][y]];
+          
+          setPixel(x, y, pal[0], pal[1], pal[2]);
+        }
     }
-  }
 }
 
 /**
@@ -174,4 +180,5 @@ setup()
 void
 loop()
 {
+  /* We do nothing here */
 }
