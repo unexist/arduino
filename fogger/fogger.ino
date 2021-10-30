@@ -2,7 +2,7 @@
    @package fogger
 
    @file Fogger arduino sketch
-   @copyright (c) 2017 Christoph Kappel <unexist@subforge.org>
+   @copyright (c) 2017-2021 Christoph Kappel <christoph@unexist.dev>
    @version $Id$
 
    This program can be distributed under the terms of the GNU GPL.
@@ -14,13 +14,17 @@
 #define PIN_SONIC_TRIG 3
 
 void setup() {
-  /* Set up  pins */
+  /* Set up pins */
   pinMode(PIN_RELAIS1, OUTPUT);
   pinMode(PIN_SONIC_ECHO, INPUT);   
   pinMode(PIN_SONIC_TRIG, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   /* Set Relais to high */
   digitalWrite(PIN_RELAIS1, HIGH);
+
+  /* Set internal led to high */
+  digitalWrite(LED_BUILTIN, HIGH);
 
   Serial.begin(9600);
 }
@@ -37,13 +41,16 @@ void loop() {
   long duration = pulseIn(PIN_SONIC_ECHO, HIGH);
   long distance = (duration / 2) * 0.03432;
 
-  if (200 >= distance && 0 != distance)
-    {
+    if (35 <= distance && 110 >= distance) {
+      digitalWrite(LED_BUILTIN, LOW);
+      
       digitalWrite(PIN_RELAIS1, LOW);
-      delay(4000);
+      delay(5000);
       digitalWrite(PIN_RELAIS1, HIGH);
 
-      delay(600000);
+      delay(900000);
+      digitalWrite(LED_BUILTIN, HIGH);
+
     }
 
   Serial.print(distance);
