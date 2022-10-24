@@ -35,7 +35,7 @@ typedef struct triangle_t {
 
 /* Data */
 Triangle right_bottom = {
-  .l1 = { .start =   1, .end =  14 },
+  .l1 = { .start =   0, .end =  14 },
   .l2 = { .start =  99, .end = 108 },
   .l3 = { .start = 192, .end = 206 }
 };
@@ -47,7 +47,7 @@ Triangle right = {
 };
 
 Triangle top = {
-  .l1 = { .start =  57, .end =  65 },
+  .l1 = { .start =  56, .end =  65 },
   .l2 = { .start = 151, .end = 166 },
   .l3 = { .start = 166, .end = 181 }
 };
@@ -65,7 +65,10 @@ Triangle left_bottom = {
 };
 
 Triangle *triangles[] = { &top, &right, &right_bottom, &left_bottom, &left };
-Line *lines[] = { &(right_bottom.l1), &(left_bottom.l2), &(left_bottom.l3), &(left.l1), &(left.l2), &(top.l2), &(top.l3), &(right.l1), &(right.l2), &(right_bottom.l3) };
+Line *lines[] = { 
+    &(right_bottom.l1), &(left_bottom.l2), &(left_bottom.l3), &(left.l1), &(left.l2), &(top.l2), &(top.l3), &(right.l1), &(right.l2), &(right_bottom.l3),
+    &(right_bottom.l2), &(right.l3), &(top.l1), &(left.l3), &(left_bottom.l1)
+};
 
 uint8_t high[] = { 
   40, 41, 255,
@@ -165,27 +168,36 @@ void clear() {
 
 /* Effects */
 
+void rotateBlink(Triangle *t) {
+    drawTriangle(t, 255, 0, 0);
+
+    strip.show();
+
+    delay(200);
+
+    drawTriangle(t, 0, 0, 0);
+
+    strip.show();
+
+    delay(200);
+}
+
 void rotate() {
   for (uint8_t i = 0; i < LENGTH(triangles); i++) {
+    rotateBlink(triangles[i]);
+
+    for (uint8_t j = i; j < LENGTH(triangles); j++) {
+      rotateBlink(triangles[j]);  
+      rotateBlink(triangles[j]);          
+    }
+
+    rotateBlink(triangles[i]);          
+
     drawTriangle(triangles[i], 255, 0, 0);
 
     strip.show();
 
-    delay(500);
-
-    for (uint8_t j = i; j < LENGTH(triangles) - 1; j++) {
-      if (j != LENGTH(triangles) - 1) {
-        drawTriangle(triangles[j], 0, 0, 0);
-      }
-              
-      drawTriangle(triangles[j + 1], 255, 0, 0);
-
-      strip.show();
-
-      delay(500);
-    }
-
-    drawTriangle(triangles[i], 255, 0, 0);
+    delay(200);
   }
 }
 
@@ -203,11 +215,12 @@ void hilight() {
   for (uint16_t i = 0; i < LENGTH(high); i++) {
     if (255 == high[i]) {
       strip.show();
-      delay(50);  
+
+      delay(10);  
 
       setAllPixel(255, 0, 0);
     } else {
-      setPixel(high[i], 255, 255, 255);
+      setPixel(high[i], 0, 255, 255);
     }
   }
 }
@@ -257,14 +270,12 @@ void loop() {
 
   clear();
 
-  pulsate();
-
-  /*switch (random(1, 4)) {
+  switch (random(1, 4)) {
     case 1: rotate();  break;
     case 2: race();    break;    
     case 3: hilight(); break;
     case 4: pulsate(); break;
-  }*/
+  }
 
   delay(1000);
 }
