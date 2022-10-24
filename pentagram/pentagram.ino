@@ -127,7 +127,8 @@ uint8_t high[] = {
   3, 203, 255,
   3, 204, 255,
   2, 205, 255,
-  1, 206, 255
+  1, 206, 255,
+  255
 };
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
@@ -216,7 +217,7 @@ void hilight() {
     if (255 == high[i]) {
       strip.show();
 
-      delay(10);  
+      delay(5);
 
       setAllPixel(255, 0, 0);
     } else {
@@ -270,7 +271,7 @@ void loop() {
 
   clear();
 
-  switch (random(1, 4)) {
+  switch (random(1, 5)) {
     case 1: rotate();  break;
     case 2: race();    break;    
     case 3: hilight(); break;
