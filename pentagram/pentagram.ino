@@ -13,11 +13,8 @@
 
 /* LED stuff */
 #define PIXEL_COUNT 206
-#define PIXEL_PIN 2
+#define PIXEL_PIN 13
 #define PIXEL_TYPE (NEO_GRB + NEO_KHZ800)
-
-/* Button */
-#define BUTTON_PIN 3
 
 /* Debug */
 //#define DEBUG 1
@@ -79,7 +76,7 @@ uint8_t high[] = {
   35, 46, 255,
   34, 47, 255,
   33, 48, 255,
-  32, 39, 255,
+  32, 49, 255,
   31, 50, 255,
   30, 51, 255,
   29, 52, 255,
@@ -135,7 +132,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 /* Helper */
 
 void setPixel(uint8_t x, uint8_t r, uint8_t g, uint8_t b) {
-  strip.setPixelColor(x, r, g, b);
+  strip.setPixelColor(x, strip.Color(r, g, b));
+
 }
 
 void setAllPixel(uint8_t r, uint8_t g, uint8_t b) {
@@ -175,8 +173,11 @@ void rotate() {
 
     delay(500);
 
-    for (uint8_t j = i; j < LENGTH(triangles); j++) {
-      drawTriangle(triangles[j],       0, 0, 0);
+    for (uint8_t j = i; j < LENGTH(triangles) - 1; j++) {
+      if (j != LENGTH(triangles) - 1) {
+        drawTriangle(triangles[j], 0, 0, 0);
+      }
+              
       drawTriangle(triangles[j + 1], 255, 0, 0);
 
       strip.show();
@@ -190,22 +191,19 @@ void rotate() {
 
 void race() {
   for (uint8_t i = 0; i < LENGTH(lines); i++) {
-    for (uint8_t j = lines[i]->start; j < lines[i]->end; j++) {
-      setAllPixel(255, 0, 0);
-      setPixel(j, 255, 255, 0);
-      
-      strip.show();
+    drawLine(lines[i], 255, 0, 0);
+    
+    strip.show();
 
-      delay(500);      
-    }
+    delay(500);  
   }
 }
 
 void hilight() {
-  for (uint8_t i = 0; i < LENGTH(high); i++) {
-    if (255 == i) {
+  for (uint16_t i = 0; i < LENGTH(high); i++) {
+    if (255 == high[i]) {
       strip.show();
-      delay(100);  
+      delay(50);  
 
       setAllPixel(255, 0, 0);
     } else {
@@ -215,9 +213,9 @@ void hilight() {
 }
 
 void pulsate() {
-  uint8_t treshold = random(255);
+  uint8_t treshold = 50; //random(0, 150);
 
-  for (uint8_t i = 255; i > treshold; i -= 15) {
+  for (uint8_t i = 255; i > treshold; i -= 2) {
     setAllPixel(i, 0, 0);
 
     strip.show();
@@ -225,7 +223,7 @@ void pulsate() {
     delay(200);
   }
 
-  for (uint8_t i = treshold; i < 255; i += 15) {
+  for (uint8_t i = treshold; i < 255; i += 2) {
     setAllPixel(i, 0, 0);
 
     strip.show();
@@ -259,12 +257,14 @@ void loop() {
 
   clear();
 
-  switch (random(1, 4)) {
+  pulsate();
+
+  /*switch (random(1, 4)) {
     case 1: rotate();  break;
     case 2: race();    break;    
     case 3: hilight(); break;
     case 4: pulsate(); break;
-  }
+  }*/
 
   delay(1000);
 }
