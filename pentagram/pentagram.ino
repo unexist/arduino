@@ -13,11 +13,18 @@
 
 /* LED stuff */
 #define PIXEL_COUNT 206
-#define PIXEL_PIN 13
 #define PIXEL_TYPE (NEO_GRB + NEO_KHZ800)
 
+/* Pins */
+#define PIN_PIXEL 13
+#define PIN_ARDUINO A0
+
+/* MODES */
+#define MODE_PULSE  1
+#define MODE_BRIGHT 2
+
 /* Debug */
-//#define DEBUG 1
+#define DEBUG 1
 
 #define LENGTH(a) (sizeof(a) / sizeof(a[0])) 
 
@@ -131,7 +138,9 @@ uint8_t high[] = {
   255
 };
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
+volatile uint8_t arduinoState = 0;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIN_PIXEL, PIXEL_TYPE);
 
 /* Helper */
 
@@ -227,22 +236,51 @@ void hilight() {
 }
 
 void pulsate() {
-  uint8_t treshold = 50; //random(0, 150);
+  uint8_t treshold = random(0, 150);
 
-  for (uint8_t i = 255; i > treshold; i -= 2) {
+#ifdef DEBUG
+  Serial.print("Pulsate: ");
+  Serial.println(treshold);  
+#endif /* DEBUG */
+
+  for (uint8_t i = 0; i < treshold && MODE_PULSE == arduinoState; i += 1) {
     setAllPixel(i, 0, 0);
+
+#ifdef DEBUG
+    Serial.print("Pulsate up: ");
+    Serial.println(i);
+#endif /* DEBUG */
 
     strip.show();
 
     delay(200);
   }
 
-  for (uint8_t i = treshold; i < 255; i += 2) {
+  delay(1000);
+
+  for (uint8_t i = treshold; i > 0 && MODE_PULSE == arduinoState; i -= 1) {
     setAllPixel(i, 0, 0);
+
+#ifdef DEBUG
+  Serial.print("Pulsate down: ");
+  Serial.println(i);
+#endif /* DEBUG */
 
     strip.show();
 
     delay(200);
+  }
+}
+
+/* ISR */
+
+void pin_ISR() {
+  uint8_t sv = analogRead(PIN_ARDUINO);
+
+  if (200 < sv) {
+    arduinoState = MODE_BRIGHT;     
+  } else {
+    arduinoState = MODE_PULSE;
   }
 }
 
@@ -251,7 +289,20 @@ void pulsate() {
  **/
  
 void setup() {
+  /* Init RNG */
+  randomSeed(analogRead(A2));
+
+  /* Set up pins */
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PIN_ARDUINO, INPUT);
+  attachInterrupt(0, pin_ISR, CHANGE);
+
+  /* Set Arduino to low */
+  digitalWrite(PIN_ARDUINO, LOW);
+
+  /* Init strip */
   strip.begin();
+  setAllPixel(255, 0, 0);
   strip.show();
 
 #ifdef DEBUG
@@ -264,19 +315,14 @@ void setup() {
  **/
 
 void loop() {
-  setAllPixel(255, 0, 0);
-  strip.show();
-
-  delay(5000);
-
-  clear();
-
-  switch (random(1, 5)) {
-    case 1: rotate();  break;
-    case 2: race();    break;    
-    case 3: hilight(); break;
-    case 4: pulsate(); break;
-  }
-
+  pulsate();  
   delay(1000);
+
+  if (MODE_BRIGHT == arduinoState) {
+    setAllPixel(255, 0, 0);
+    strip.show();
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 }

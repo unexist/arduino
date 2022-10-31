@@ -12,6 +12,10 @@
 #define PIN_RELAIS1    7
 #define PIN_SONIC_ECHO 4
 #define PIN_SONIC_TRIG 3
+#define PIN_ARDUINO    13
+
+/* Debug */
+#define DEBUG 1
 
 void setup() {
   /* Set up pins */
@@ -19,6 +23,7 @@ void setup() {
   pinMode(PIN_SONIC_ECHO, INPUT);   
   pinMode(PIN_SONIC_TRIG, OUTPUT);
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PIN_ARDUINO, OUTPUT);
 
   /* Set Relais to high */
   digitalWrite(PIN_RELAIS1, HIGH);
@@ -26,7 +31,12 @@ void setup() {
   /* Set internal led to high */
   digitalWrite(LED_BUILTIN, HIGH);
 
+  /* Set Arduino to low */
+  digitalWrite(PIN_ARDUINO, LOW);
+
+#ifdef DEBUG
   Serial.begin(9600);
+#endif /* DEBUG */
 }
 
 void loop() {
@@ -41,20 +51,31 @@ void loop() {
   long duration = pulseIn(PIN_SONIC_ECHO, HIGH);
   long distance = (duration / 2) * 0.03432;
 
-    if (35 <= distance && 110 >= distance) {
-      digitalWrite(LED_BUILTIN, LOW);
-      
-      digitalWrite(PIN_RELAIS1, LOW);
-      delay(5000);
-      digitalWrite(PIN_RELAIS1, HIGH);
-
-      delay(900000);
-      digitalWrite(LED_BUILTIN, HIGH);
-
-    }
-
+#ifdef DEBUG
+  Serial.print("Distance: ");
   Serial.print(distance);
   Serial.println(" cm");
+#endif /* DEBUG */
 
+  if (110 >= distance && 50 <= distance) {
+    /* Notify other Arduino */
+    digitalWrite(PIN_ARDUINO, HIGH);
+      
+    /* Enable fogger */
+    digitalWrite(PIN_RELAIS1, LOW);
+    delay(5000);
+    digitalWrite(PIN_RELAIS1, HIGH);
+
+#ifdef DEBUG
+    Serial.println("Fogger sleep 15min");
+ #endif /* DEBUG */
+
+    /* Set internal LED, notify other Arduino and sleep 15mins */
+    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(PIN_ARDUINO, LOW);
+    delay(900000);
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+ 
   delay(100);
 }
