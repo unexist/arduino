@@ -2,10 +2,10 @@
    @package fogger
 
    @file Fogger arduino sketch
-   @copyright (c) 2017-2021 Christoph Kappel <christoph@unexist.dev>
+   @copyright (c) 2017-present Christoph Kappel <christoph@unexist.dev>
    @version $Id$
 
-   This program can be distributed under the terms of the GNU GPL.
+   This program can be distributed under the terms of the GNU GPLv3.
    See the file COPYING.
  **/
 

@@ -1,12 +1,12 @@
 /**
- * @package cubes
+ * @package legodmx
  *
- * @file Cubes arduino sketch
- * @copyright (c) 2016-present Christoph Kappel <christoph@unexist.dev>
+ * @file Legodmx arduino sketch
+ * @copyright (c) 2025-present Christoph Kappel <christoph@unexist.dev>
  * @version $Id$
  *
  * This program can be distributed under the terms of the GNU GPLv3.
- * See the file COPYING.
+ * See the file LICENSE.
  **/
 
 #include <SPI.h>
