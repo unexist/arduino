@@ -29,11 +29,11 @@ char buf[255] = { 0 };
 #endif /* DEBUG */
 
 /**
- *  Handle frame recieval
+ *  Handle frame receival
  *  @param  channels  Channels that was set
  **/
 
-void onFrameReceived(short unsigned int channel) {
+void onReceiveComplete(short unsigned int channel) {
     int dmxval = slave.getChannelValue(1);
   
     analogWrite(MOS_PIN, dmxval);
@@ -53,12 +53,12 @@ void setup() {
     /* Init pins */
     pinMode(MOS_PIN, OUTPUT);
 
+#ifdef DEBUG
     /* Init and start DMX slave */
     slave.enable();  
     slave.setStartAddress(DMX_ADDRESS);
-    slave.onReceiveComplete(onFrameReceived);
-
-#ifdef DEBUG
+    slave.onReceiveComplete(onReceiveComplete);
+#else DEBUG /* DEBUG */
     Serial.begin(9600);
 #endif /* DEBUG */
 }
